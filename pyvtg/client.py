@@ -46,6 +46,20 @@ class Client(ClientBaseProtocol):
         result = self.wait_for_results(task)
         return result
 
+    def run_image(self, input_):
+        if self.__collaboration_id is None:
+            print('Please call set_collaboration_id() first!')
+
+        task = self.post_task(
+            name=self.__task_name,
+            image=self.__image,
+            input_=input_,
+            collaboration_id=self.__collaboration_id
+        )
+
+        result = self.wait_for_results(task)
+        return result
+
     def wait_for_results(self, task):
         print("Waiting for results ...")
 

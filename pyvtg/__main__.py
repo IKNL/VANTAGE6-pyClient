@@ -28,7 +28,7 @@ def dispatch_RPC(input_data, pkg=''):
     result = func(*args, **kwargs)
     return json.dumps(result)
 
-def main(PKG):
+def docker_wrapper(PKG):
     """...."""
     # Database, input and output files ...
     DATABASE_URI = os.environ.get('DATABASE_URI')
@@ -68,4 +68,4 @@ def main(PKG):
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
     PKG = sys.argv[1]
-    main(PKG)
+    docker_wrapper(PKG)
