@@ -5,16 +5,28 @@ import importlib
 
 def dispatch_RPC(input_data, pkg=''):
     """Dispatch."""
-    if input_data:
-        input_ = json.loads(input_data)
-        method = input_['method']
-        args = input_['args']
-        kwargs = input_['kwargs']
+    if not input_data or (not 'method' in input_data):
+        return ''
 
-    importlib.import_module(pkg)
+    input_ = json.loads(input_data)
 
-    return ''
+    # 'method' is a required key
+    methodname = f"RPC_{input_['method']}"
 
+    # 'args' and 'kwargs' can be left out
+    args = input_.get('args', [])
+    kwargs = input_.get('kwargs', {})
+
+    # The imported module is expected to contain all 'RPC_' methods.
+    # Of course, they can be defined in separate files/packages, as long as they
+    # are imported into the module's namespace.
+    mod = importlib.import_module(pkg)
+
+    func = getattr(mod, methodname)
+
+    # The 'RPC_' function should return a (JSON) serializable result.
+    result = func(*args, **kwargs)
+    return json.dumps(result)
 
 def main(PKG):
     """...."""
@@ -31,7 +43,7 @@ def main(PKG):
     print(f'Using {DATABASE_URI} as database')
 
     # Load the input from disk
-    print(f'Loading {INPUT_FILE}')
+    print(f'Loading input from "{INPUT_FILE}"')
 
     try:
         with open(INPUT_FILE) as fp:
@@ -43,8 +55,8 @@ def main(PKG):
     output_data = dispatch_RPC(input_data, PKG)
 
     # Write output ...
-    # with open(OUTPUT_FILE, 'w') as fp:
-    #     fp.write(output_data)
+    with open(OUTPUT_FILE, 'w') as fp:
+        fp.write(output_data)
 
     # All done ...
     print('Done!')
