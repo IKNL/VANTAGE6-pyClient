@@ -4,7 +4,7 @@ import json
 import importlib
 
 def dispatch_RPC(input_data, pkg=''):
-    """Dispatch."""
+    """Dispatch Remote Procedure Call."""
     if not input_data or (not 'method' in input_data):
         return ''
 
