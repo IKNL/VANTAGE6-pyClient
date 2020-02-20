@@ -4,14 +4,35 @@ import logging
 import time
 import json
 import requests
+import typing
+import jwt
 
-from .util import (
+from pyvtg.util import (
     unpack_bytes_from_transport, 
     prepare_bytes_for_transport
 )
 
+from pyvtg.encryption import NoCryptor, Cryptor
+
 
 module_name = "client"
+
+
+class WhoAmI(typing.NamedTuple):
+    """ Data-class to store Authenticable information in.
+    """
+    type_: str
+    id_: int
+    name: str
+    organization_name: str
+    organization_id: int
+
+    def __repr__(self) -> str:
+        return (f"<WhoAmI " 
+            f"name={self.name}, "
+            f"type={self.type_}, "
+            f"organization={self.organization_name}"
+        ">")
 
 
 class BaseClient:
@@ -133,6 +154,7 @@ class BaseClient:
         CRYPTOR_CLASS = NoCryptor if disabled else Cryptor
         cryptor = CRYPTOR_CLASS(private_key_file)
         if disabled:
+            self.cryptor = cryptor
             return 
         
         # check if the public-key is the same on the server. If this is 
@@ -404,6 +426,37 @@ class UserClient(BaseClient):
         self.__task_name = ''
         self.__collaboration_id = None
 
+    def authenticate(self, username: str, password: str):
+        """ User authentication at the central server.
+            It also identifies itself by retrieving the organization to 
+            which this user belongs. The server returns a JWT-token 
+            that is used in all succeeding requests.
+            :param username: username used to authenticate
+            :param password: password used to authenticate
+        """
+        super().authenticate({
+            "username": username,
+            "password": password
+        }, path="token/user")
+
+        # identify the user and the organization to which this user 
+        # belongs. This is usefull for some client side checks
+        type_ = "user"
+        id_ = jwt.decode(self.token, verify=False)['identity']
+        user = self.request(f"user/{id_}")
+        name = user.get("firstname")
+        organization_id = user.get("organization").get("id")
+        organization = self.request(f"organization/{organization_id}")
+        organization_name = organization.get("name")
+
+        self.whoami = WhoAmI(
+            type_=type_,
+            id_=id_,
+            name=name,
+            organization_id=organization_id,
+            organization_name=organization_name
+        )
+
     def set_collaboration_id(self, collaboration_id):
         """Set the collaboration_id for future calls to `call()`."""
         self.__collaboration_id = collaboration_id
@@ -442,7 +495,8 @@ class UserClient(BaseClient):
             name=self.__task_name,
             image=self.__image,
             input_=input_,
-            collaboration_id=self.__collaboration_id
+            collaboration_id=self.__collaboration_id,
+            organization_ids=[8]
         )
 
         result = self.wait_for_results(task)
