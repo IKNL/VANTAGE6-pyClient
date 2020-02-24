@@ -517,7 +517,8 @@ class UserClient(BaseClient):
             time.sleep(1)
 
         # If we're here, the task has completed
-        task = self.request(f"/task/{task['id']}?include=results")
-        return task
+        results = self.get_results(task_id=task['id'])
+        # task = self.request(f"/task/{task['id']}?include=results")
+        return results
 
 
