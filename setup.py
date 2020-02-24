@@ -19,21 +19,23 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 
 # Read the API version from disk
-with open(path.join(here, 'pyvtg', 'VERSION')) as fp:
+with open(path.join(here, 'vtg', 'VERSION')) as fp:
     __version__ = fp.read()
 
 
 # Setup the package
 setup(
-    name='pyvtg',
+    name='VANTAGE6-pyClient',
     version=__version__,
     description='Utilities for federated learning',
     long_description=long_description,
-    url='https://github.com/mellesies/pyvtg',
+    url='https://github.com/iknl/VANTAGE6-pyClient',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     python_requires='>=3',
-    # install_requires=[
-    #     'pytaskmanager @ https://github.com/IKNL/VANTAGE6/tarball/distributedlearning.ai/TEST#egg=pytaskmanager',
-    # ]
+    install_requires=[
+        "cryptography",
+        "requests",
+        "pyjwt"
+    ]
 )
 
